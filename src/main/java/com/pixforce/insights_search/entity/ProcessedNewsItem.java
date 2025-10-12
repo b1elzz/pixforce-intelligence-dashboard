@@ -90,7 +90,7 @@ public class ProcessedNewsItem {
      * Score de confiança da análise (0.0 a 1.0).
      * Indica o nível de certeza da IA na classificação.
      */
-    @Column(precision = 3, scale = 2)
+    @Column
     private Double confidenceScore;
     
     /**
