@@ -1,0 +1,62 @@
+# ===========================================
+# PIXFORCE INSIGHTS SEARCH - GITIGNORE
+# ===========================================
+
+# Arquivos de ambiente (contêm chaves de API)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Banco de dados local
+*.db
+*.sqlite
+*.sqlite3
+
+# Arquivos de backup
+*.bak
+*.backup
+*.old
+
+# Arquivos de configuração local
+application-local.properties
+application-dev.properties
