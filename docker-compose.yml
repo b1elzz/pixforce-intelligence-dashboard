@@ -1,0 +1,85 @@
+# ===========================================
+# DOCKER COMPOSE - PIXFORCE INSIGHTS SEARCH
+# ===========================================
+# 
+# Compose simples para o MVP.
+# Inclui PostgreSQL + aplicação Spring Boot.
+#
+# COMANDOS:
+# docker-compose up -d          # Subir tudo
+# docker-compose down           # Parar tudo
+# docker-compose logs -f app    # Ver logs da aplicação
+# docker-compose logs -f db     # Ver logs do banco
+#
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # BANCO DE DADOS POSTGRESQL
+  # ===========================================
+  database:
+    image: postgres:15-alpine
+    container_name: pixforce-db
+    environment:
+      POSTGRES_DB: pixforce_insights
+      POSTGRES_USER: pixforce
+      POSTGRES_PASSWORD: insights123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pixforce -d pixforce_insights"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pixforce-network
+
+  # ===========================================
+  # APLICAÇÃO SPRING BOOT
+  # ===========================================
+  app:
+    build: .
+    container_name: pixforce-app
+    environment:
+      # Configurações do banco
+      DB_USERNAME: pixforce
+      DB_PASSWORD: insights123
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/pixforce_insights
+      
+      # Chaves de API (substitua pelas suas chaves reais)
+      NEWSDATA_API_KEY: your_newsdata_key_here
+      GEMINI_API_KEY: your_gemini_key_here
+      
+      # Configurações da aplicação
+      SERVER_PORT: 8080
+      LOG_LEVEL: INFO
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - pixforce-network
+
+# ===========================================
+# VOLUMES
+# ===========================================
+volumes:
+  postgres_data:
+    driver: local
+
+# ===========================================
+# REDES
+# ===========================================
+networks:
+  pixforce-network:
+    driver: bridge

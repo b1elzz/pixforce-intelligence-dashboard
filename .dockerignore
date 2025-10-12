@@ -1,0 +1,63 @@
+# ===========================================
+# DOCKER IGNORE - PIXFORCE INSIGHTS SEARCH
+# ===========================================
+# 
+# Arquivos e diretórios a serem ignorados no build.
+# Otimiza o tamanho da imagem e velocidade do build.
+#
+
+# ===========================================
+# ARQUIVOS DE DESENVOLVIMENTO
+# ===========================================
+.git
+.gitignore
+README.md
+HELP.md
+desafio_pixforce.md
+solucao_pixforce.md
+
+# ===========================================
+# ARQUIVOS DE CONFIGURAÇÃO LOCAL
+# ===========================================
+.env
+.env.local
+.env.production
+env.example
+
+# ===========================================
+# ARQUIVOS DE BUILD
+# ===========================================
+target/
+*.jar
+*.war
+*.ear
+
+# ===========================================
+# ARQUIVOS DE IDE
+# ===========================================
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# ===========================================
+# ARQUIVOS DE SISTEMA
+# ===========================================
+.DS_Store
+Thumbs.db
+*.log
+logs/
+
+# ===========================================
+# ARQUIVOS TEMPORÁRIOS
+# ===========================================
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ===========================================
+# ARQUIVOS DE TESTE
+# ===========================================
+src/test/
