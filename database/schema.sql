@@ -1,7 +1,7 @@
 -- ===========================================
 -- PIXFORCE INSIGHTS SEARCH - SCHEMA DO BANCO
 -- ===========================================
--- 
+--
 -- Script SQL para criação do banco de dados e tabelas.
 -- Execute este script no PostgreSQL antes de rodar a aplicação.
 --
@@ -44,11 +44,11 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO pixforce;
 
 -- As tabelas serão criadas automaticamente pelo Hibernate
 -- quando a aplicação Spring Boot for executada pela primeira vez.
--- 
+--
 -- TABELAS QUE SERÃO CRIADAS:
 -- - news_items: Notícias brutas coletadas da API
 -- - processed_news_items: Notícias analisadas pela IA
--- 
+--
 -- CONFIGURAÇÕES IMPORTANTES:
 -- - spring.jpa.hibernate.ddl-auto=update (cria/atualiza automaticamente)
 -- - spring.datasource.url=jdbc:postgresql://localhost:5432/pixforce_insights
