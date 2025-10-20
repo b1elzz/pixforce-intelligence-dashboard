@@ -1,13 +1,21 @@
 package com.pixforce.insights_search.service;
 
+import com.pixforce.insights_search.entity.Category;
 import com.pixforce.insights_search.entity.NewsItem;
+import com.pixforce.insights_search.entity.ProcessedNewsItem;
 import com.pixforce.insights_search.entity.ProcessingStatus;
 import com.pixforce.insights_search.repository.NewsItemRepository;
+import com.pixforce.insights_search.repository.ProcessedNewsItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ===========================================
@@ -42,6 +50,7 @@ public class PipelineService {
     private final NewsDataService newsDataService;
     private final GeminiService geminiService;
     private final NewsItemRepository newsItemRepository;
+    private final ProcessedNewsItemRepository processedNewsItemRepository;
     
     /**
      * Executa o pipeline completo de coleta e análise.
@@ -248,6 +257,156 @@ public class PipelineService {
         stats.append(String.format("Falharam: %d\n", failedNews));
         
         return stats.toString();
+    }
+    
+    /**
+     * Busca todos os insights processados com paginação.
+     * 
+     * @param pageable Configuração de paginação
+     * @return Página de insights processados
+     */
+    public Page<ProcessedNewsItem> getAllInsights(Pageable pageable) {
+        log.debug("Buscando todos os insights processados");
+        return processedNewsItemRepository.findAll(pageable);
+    }
+    
+    /**
+     * Busca insights por categoria.
+     * 
+     * @param category Categoria desejada
+     * @param pageable Configuração de paginação
+     * @return Página de insights da categoria
+     */
+    public Page<ProcessedNewsItem> getInsightsByCategory(Category category, Pageable pageable) {
+        log.debug("Buscando insights da categoria: {}", category);
+        return processedNewsItemRepository.findByCategory(category, pageable);
+    }
+    
+    /**
+     * Busca insights por relevância.
+     * 
+     * @param isRelevant Se deve buscar apenas relevantes
+     * @param pageable Configuração de paginação
+     * @return Página de insights filtrados por relevância
+     */
+    public Page<ProcessedNewsItem> getInsightsByRelevance(Boolean isRelevant, Pageable pageable) {
+        log.debug("Buscando insights por relevância: {}", isRelevant);
+        
+        if (isRelevant) {
+            return processedNewsItemRepository.findByIsRelevantTrue(pageable);
+        } else {
+            return processedNewsItemRepository.findByIsRelevantFalse(pageable);
+        }
+    }
+    
+    /**
+     * Busca insights por categoria e relevância.
+     * 
+     * @param category Categoria desejada
+     * @param isRelevant Se deve buscar apenas relevantes
+     * @param pageable Configuração de paginação
+     * @return Página de insights filtrados
+     */
+    public Page<ProcessedNewsItem> getInsightsByCategoryAndRelevance(Category category, Boolean isRelevant, Pageable pageable) {
+        log.debug("Buscando insights da categoria {} e relevância {}", category, isRelevant);
+        
+        if (isRelevant) {
+            return processedNewsItemRepository.findByIsRelevantTrueAndCategory(category, pageable);
+        } else {
+            // Para não relevantes, precisamos fazer uma consulta customizada
+            return processedNewsItemRepository.findByCategoryAndIsRelevantFalse(category, pageable);
+        }
+    }
+    
+    /**
+     * Gera resumo diário de insights processados.
+     * 
+     * @param startDate Data inicial
+     * @param endDate Data final
+     * @return Resumo diário
+     */
+    public Map<String, Object> getDailySummary(LocalDateTime startDate, LocalDateTime endDate) {
+        log.info("Gerando resumo diário de {} até {}", startDate, endDate);
+        
+        Map<String, Object> summary = new HashMap<>();
+        
+        try {
+            // Buscar insights do período
+            List<ProcessedNewsItem> dailyInsights = processedNewsItemRepository
+                .findByProcessedAtBetween(startDate, endDate);
+            
+            // Estatísticas gerais
+            long totalInsights = dailyInsights.size();
+            long relevantInsights = dailyInsights.stream()
+                .mapToLong(item -> Boolean.TRUE.equals(item.getIsRelevant()) ? 1 : 0)
+                .sum();
+            
+            // Estatísticas por categoria
+            Map<String, Long> categoryStats = new HashMap<>();
+            for (Category category : Category.values()) {
+                long count = dailyInsights.stream()
+                    .mapToLong(item -> item.getCategory() == category ? 1 : 0)
+                    .sum();
+                categoryStats.put(category.getDisplayName(), count);
+            }
+            
+            // Insights com alta confiança
+            long highConfidenceInsights = dailyInsights.stream()
+                .mapToLong(item -> item.hasHighConfidence() ? 1 : 0)
+                .sum();
+            
+            // Montar resumo
+            summary.put("periodo", Map.of(
+                "inicio", startDate.toString(),
+                "fim", endDate.toString()
+            ));
+            summary.put("estatisticas", Map.of(
+                "totalInsights", totalInsights,
+                "insightsRelevantes", relevantInsights,
+                "percentualRelevantes", totalInsights > 0 ? (relevantInsights * 100.0 / totalInsights) : 0,
+                "insightsAltaConfianca", highConfidenceInsights
+            ));
+            summary.put("categorias", categoryStats);
+            summary.put("insights", dailyInsights.stream()
+                .filter(item -> Boolean.TRUE.equals(item.getIsRelevant()))
+                .limit(10) // Top 10 insights relevantes
+                .map(this::createInsightSummary)
+                .toList());
+            
+            log.info("Resumo diário gerado: {} insights, {} relevantes", totalInsights, relevantInsights);
+            return summary;
+            
+        } catch (Exception e) {
+            log.error("Erro ao gerar resumo diário: {}", e.getMessage(), e);
+            summary.put("erro", "Erro ao gerar resumo: " + e.getMessage());
+            return summary;
+        }
+    }
+    
+    /**
+     * Cria um resumo de um insight para o relatório diário.
+     * 
+     * @param insight Insight processado
+     * @return Resumo do insight
+     */
+    private Map<String, Object> createInsightSummary(ProcessedNewsItem insight) {
+        Map<String, Object> summary = new HashMap<>();
+        
+        summary.put("id", insight.getId());
+        summary.put("categoria", insight.getCategory().getDisplayName());
+        summary.put("confianca", insight.getConfidenceLevel());
+        summary.put("resumoExecutivo", insight.getExecutiveSummary());
+        summary.put("acaoSugerida", insight.getSuggestedAction());
+        summary.put("processadoEm", insight.getProcessedAt().toString());
+        
+        // Informações da notícia original
+        if (insight.getNewsItem() != null) {
+            summary.put("titulo", insight.getNewsItem().getTitle());
+            summary.put("fonte", insight.getNewsItem().getSource());
+            summary.put("url", insight.getNewsItem().getUrl());
+        }
+        
+        return summary;
     }
     
     /**

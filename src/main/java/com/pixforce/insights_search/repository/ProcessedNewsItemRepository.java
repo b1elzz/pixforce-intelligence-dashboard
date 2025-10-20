@@ -235,4 +235,23 @@ public interface ProcessedNewsItemRepository extends JpaRepository<ProcessedNews
      */
     @Query("SELECT p.aiModel, COUNT(p) FROM ProcessedNewsItem p GROUP BY p.aiModel")
     List<Object[]> getAiModelStatistics();
+    
+    /**
+     * Busca notícias por categoria que não são relevantes.
+     * 
+     * @param category Categoria desejada
+     * @param pageable Configuração de paginação
+     * @return Página de notícias não relevantes da categoria
+     */
+    @Query("SELECT p FROM ProcessedNewsItem p WHERE p.category = :category AND p.isRelevant = false ORDER BY p.processedAt DESC")
+    Page<ProcessedNewsItem> findByCategoryAndIsRelevantFalse(@Param("category") Category category, Pageable pageable);
+    
+    /**
+     * Busca notícias que não são relevantes.
+     * 
+     * @param pageable Configuração de paginação
+     * @return Página de notícias não relevantes
+     */
+    @Query("SELECT p FROM ProcessedNewsItem p WHERE p.isRelevant = false ORDER BY p.processedAt DESC")
+    Page<ProcessedNewsItem> findByIsRelevantFalse(Pageable pageable);
 }
