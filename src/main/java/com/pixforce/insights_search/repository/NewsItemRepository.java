@@ -166,6 +166,17 @@ public interface NewsItemRepository extends JpaRepository<NewsItem, Long> {
     int deleteOldPendingNews(@Param("cutoffDate") LocalDateTime cutoffDate);
     
     /**
+     * Remove notícias antigas baseado na data de criação e status.
+     * 
+     * @param cutoffDate Data limite para remoção
+     * @param status Status das notícias a serem removidas
+     * @return Número de notícias removidas
+     */
+    @Modifying
+    @Query("DELETE FROM NewsItem n WHERE n.createdAt < :cutoffDate AND n.status = :status")
+    int deleteByCreatedAtBeforeAndStatus(@Param("cutoffDate") LocalDateTime cutoffDate, @Param("status") ProcessingStatus status);
+    
+    /**
      * Atualiza status de notícias em lote.
      * 
      * @param oldStatus Status atual

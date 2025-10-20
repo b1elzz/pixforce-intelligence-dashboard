@@ -6,6 +6,7 @@ import com.pixforce.insights_search.dto.NewsDataResponse;
 import com.pixforce.insights_search.entity.NewsItem;
 import com.pixforce.insights_search.entity.ProcessingStatus;
 import com.pixforce.insights_search.repository.NewsItemRepository;
+import com.pixforce.insights_search.repository.ProcessedNewsItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,7 @@ public class NewsDataService {
     
     private final NewsDataConfig newsDataConfig;
     private final NewsItemRepository newsItemRepository;
+    private final ProcessedNewsItemRepository processedNewsItemRepository;
     private final WebClient webClient;
     
     /**
@@ -242,6 +244,32 @@ public class NewsDataService {
         LocalDateTime cutoffDate = LocalDateTime.now().minusDays(daysAgo);
         int removed = newsItemRepository.deleteByCreatedAtBefore(cutoffDate);
         log.info("Removidas {} notícias antigas (mais de {} dias)", removed, daysAgo);
+        return removed;
+    }
+    
+    /**
+     * Remove notícias que falharam no processamento.
+     * 
+     * @param daysAgo Número de dias para considerar como antigas
+     * @return Número de notícias removidas
+     */
+    public int cleanupFailedNews(int daysAgo) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(daysAgo);
+        int removed = newsItemRepository.deleteByCreatedAtBeforeAndStatus(cutoffDate, ProcessingStatus.FAILED);
+        log.info("Removidas {} notícias que falharam (mais de {} dias)", removed, daysAgo);
+        return removed;
+    }
+    
+    /**
+     * Remove notícias processadas antigas.
+     * 
+     * @param daysAgo Número de dias para considerar como antigas
+     * @return Número de notícias processadas removidas
+     */
+    public int cleanupOldProcessedNews(int daysAgo) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(daysAgo);
+        int removed = processedNewsItemRepository.deleteByCreatedAtBefore(cutoffDate);
+        log.info("Removidas {} notícias processadas antigas (mais de {} dias)", removed, daysAgo);
         return removed;
     }
     

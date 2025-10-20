@@ -54,6 +54,11 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 
 		<!-- Web Scraping -->
 		<dependency>
@@ -124,12 +129,6 @@
 						</exclude>
 					</excludes>
 				</configuration>
-			</plugin>
-			<!-- Testcontainers Plugin -->
-			<plugin>
-				<groupId>org.testcontainers</groupId>
-				<artifactId>testcontainers-maven-plugin</artifactId>
-				<version>1.19.3</version>
 			</plugin>
 		</plugins>
 	</build>
